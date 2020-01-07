@@ -3,7 +3,6 @@ window.onload = function(){
   setupEvents();
 };
 function setupEvents() {
-  $('#submitLink').click(submitCurrentTab);
   $('#refresh').click(refreshLinks);
   $('#searchbox').keypress(searchOnEnter);
   $('a#options').click(function(){
@@ -11,7 +10,7 @@ function setupEvents() {
   });
 }
 function main() {
-  if (localStorage['HN.NumLinks'] == null) {
+  if (localStorage['Reddit.NumLinks'] == null) {
     buildPopupAfterResponse = true;
     UpdateFeed();
   }
@@ -35,24 +34,29 @@ function buildPopup(links) {
   searchButton.addEventListener("click", search);
 
   for (var i=0; i<links.length; i++) {
-    hnLink = links[i];
+    redditLink = links[i];
     var row = document.createElement("tr");
     row.className = "link";
     var num = document.createElement("td");
     num.innerText = i+1;
     var link_col = document.createElement("td")
+
+    // Link to post
     var title = document.createElement("a");
       title.className = "link_title";
-      title.innerText = hnLink.Title;
-      title.href = hnLink.Link;
+      title.innerText = redditLink.Title;
+      title.href = redditLink.Link;
       title.addEventListener("click", openLink);
-    var comments = document.createElement("a");
-      comments.className = "comments";
-      comments.innerText = "(comments)";
-      comments.href = hnLink.CommentsLink;
-      comments.addEventListener("click", openLink);
-    link_col.appendChild(title);
-    link_col.appendChild(comments);
+
+    // Link to subreddit
+    var subreddit = document.createElement("a");
+      subreddit.className = "subreddit";
+      subreddit.innerText = "(" + redditLink.subreddit + ")";
+      subreddit.href = redditLink.subredditLink;
+      subreddit.addEventListener("click", openLink);
+
+      link_col.appendChild(title);
+    link_col.appendChild(subreddit);
     row.appendChild(num);
     row.appendChild(link_col)
     feed.appendChild(row);
@@ -71,7 +75,7 @@ function search() {
   var searchBox = document.getElementById("searchbox");
   var keywords = searchBox.value;
   if (keywords.length > 0) {
-    var search_url = "https://hn.algolia.com/?query=" + keywords.replace(" ", "+");
+    var search_url = "https://www.reddit.com/search/?q=" + keywords.replace(" ", "+");
     openUrl(search_url, true);
   }
 }
@@ -85,14 +89,3 @@ function refreshLinks() {
   UpdateFeed();
   updateLastRefreshTime();
 }
-
-//Submit the current tab
-function submitCurrentTab() {
-  chrome.windows.getCurrent(function(win){
-    chrome.tabs.getSelected(win.id, function(tab){
-      var submit_url = "http://news.ycombinator.com/submitlink?u=" + encodeURIComponent(tab.url) + "&t=" + encodeURIComponent(tab.title);
-      openUrl(submit_url, true);
-    });
-  });
-}
-

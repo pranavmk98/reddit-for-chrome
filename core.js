@@ -4,6 +4,8 @@ var buildPopupAfterResponse = false;
 var OnFeedSuccess = null;
 var OnFeedFail = null;
 var retryMilliseconds = 120000;
+var rss_url = "http://www.reddit.com/.rss";
+var reddit_url = "https://www.reddit.com/";
 
 function SetInitialOption(key, value) {
 	if (localStorage[key] == null) {
@@ -12,13 +14,13 @@ function SetInitialOption(key, value) {
 }
 
 function UpdateIfReady(force) {
-	var lastRefresh = parseFloat(localStorage["HN.LastRefresh"]);
-	var interval = parseFloat(localStorage["HN.RequestInterval"]);
+	var lastRefresh = parseFloat(localStorage["Reddit.LastRefresh"]);
+	var interval = parseFloat(localStorage["Reddit.RequestInterval"]);
 	var nextRefresh = lastRefresh + interval;
 	var curTime = parseFloat((new Date()).getTime());
 	var isReady = (curTime > nextRefresh);
-	var isNull = (localStorage["HN.LastRefresh"] == null);
-	if ((force == true) || (localStorage["HN.LastRefresh"] == null)) {
+	var isNull = (localStorage["Reddit.LastRefresh"] == null);
+	if ((force == true) || (localStorage["Reddit.LastRefresh"] == null)) {
 		UpdateFeed();
 	}
 	else {
@@ -29,25 +31,26 @@ function UpdateIfReady(force) {
 }
 
 function UpdateFeed() {
-  $.ajax({type:'GET', dataType:'xml', url: 'https://news.ycombinator.com/rss', timeout:5000, success:onRssSuccess, error:onRssError, async: false});
+  $.ajax({type:'GET', dataType:'xml', url: rss_url, timeout:5000, success:onRssSuccess, error:onRssError, async: false});
 }
 
 function onRssSuccess(doc) {
-  if (!doc) {
-    handleFeedParsingFailed("Not a valid feed.");
-    return;
-  }
- 	links = parseHNLinks(doc);
+	if (!doc) {
+		handleFeedParsingFailed("Not a valid feed.");
+		return;
+	}
+
+	links = parseRedditLinks(doc);
 	SaveLinksToLocalStorage(links);
 	if (buildPopupAfterResponse == true) {
 		buildPopup(links);
 		buildPopupAfterResponse = false;
 	}
-	localStorage["HN.LastRefresh"] = (new Date()).getTime();
+	localStorage["Reddit.LastRefresh"] = (new Date()).getTime();
 }
 
 function updateLastRefreshTime() {
-  localStorage["HN.LastRefresh"] = (new Date()).getTime();
+  localStorage["Reddit.LastRefresh"] = (new Date()).getTime();
 }
 
 function DebugMessage(message) {
@@ -68,7 +71,7 @@ function handleFeedParsingFailed(error) {
   //var feed = document.getElementById("feed");
   //feed.className = "error"
   //feed.innerText = "Error: " + error;
-  localStorage["HN.LastRefresh"] = localStorage["HN.LastRefresh"] + retryMilliseconds;
+  localStorage["Reddit.LastRefresh"] = localStorage["Reddit.LastRefresh"] + retryMilliseconds;
 }
 
 function parseXml(xml) {
@@ -85,64 +88,69 @@ function parseXml(xml) {
   return xmlDoc;
 }
 
-function parseHNLinks(doc) {
-	var entries = doc.getElementsByTagName('entry');
+function parseRedditLinks(doc) {
+	doc_json = xmlToJson(doc).feed;
+	console.log(doc_json);
+	var entries = doc_json['entry'];
+	// console.log(entries);
 	if (entries.length == 0) {
-	  entries = doc.getElementsByTagName('item');
+	  entries = doc_json['item'];
 	}
-  var count = Math.min(entries.length, maxFeedItems);
-  var links = new Array();
-  for (var i=0; i< count; i++) {
-    item = entries.item(i);
-    var hnLink = new Object();
-    //Grab the title
-    var itemTitle = item.getElementsByTagName('title')[0];
-    if (itemTitle) {
-      hnLink.Title = itemTitle.textContent;
-    } else {
-      hnLink.Title = "Unknown Title";
-    }
-    
-    //Grab the Link
-    var itemLink = item.getElementsByTagName('link')[0];
-    if (!itemLink) {
-      itemLink = item.getElementsByTagName('comments')[0];
-    }
-    if (itemLink) {
-      hnLink.Link = itemLink.textContent;
-    } else {
-      hnLink.Link = '';
-    }
+	var count = Math.min(entries.length, maxFeedItems);
+	var links = new Array();
+	for (var i=0; i < count; i++) {
+		item = entries[i];
+		var redditLink = new Object();
 
-    //Grab the comments link
-    var commentsLink = item.getElementsByTagName('comments')[0];
-    if (commentsLink) {
-      hnLink.CommentsLink = commentsLink.textContent;
-    } else {
-      hnLink.CommentsLink = '';
-    }
-    
-    links.push(hnLink);
-  }
-  return links;
+		//Grab the title
+		console.log(item);
+		var itemTitle = item.title;
+		if (itemTitle) {
+			redditLink.Title = itemTitle["#text"];
+		} else {
+			redditLink.Title = "Unknown Title";
+		}
+
+		//Grab the Link
+		var itemLink = item["link"]["@attributes"]["href"];
+		console.log(item["link"], itemLink, item["link"]["@attributes"]);
+		if (itemLink) {
+			redditLink.Link = itemLink;
+		} else {
+			redditLink.Link = '';
+		}
+
+		//Grab the subreddit
+		var subreddit = item["category"]["@attributes"]["label"];
+		if (subreddit) {
+			redditLink.subreddit = subreddit;
+			redditLink.subredditLink = reddit_url + subreddit;
+		} else {
+			redditLink.subreddit = 'r/';
+		}
+
+		links.push(redditLink);
+	}
+	console.log(links);
+	return links;
 }
 
 function SaveLinksToLocalStorage(links) {
-	localStorage["HN.NumLinks"] = links.length;
+	localStorage["Reddit.NumLinks"] = links.length;
 	for (var i=0; i<links.length; i++) {
-		localStorage["HN.Link" + i] = JSON.stringify(links[i]);
+		localStorage["Reddit.Link" + i] = JSON.stringify(links[i]);
 	}
 }
 
 function RetrieveLinksFromLocalStorage() {
-	var numLinks = localStorage["HN.NumLinks"];
+	var numLinks = localStorage["Reddit.NumLinks"];
 	if (numLinks == null) {
 		return null;
 	}
 	else {
 		var links = new Array();
 		for (var i=0; i<numLinks; i++) {
-			links.push(JSON.parse(localStorage["HN.Link" + i]))
+			links.push(JSON.parse(localStorage["Reddit.Link" + i]))
 		}
 		return links;
 	}
@@ -155,7 +163,7 @@ function openOptions() {
 
 function openLink(e) {
   e.preventDefault();
-  openUrl(this.href, (localStorage['HN.BackgroundTabs'] == 'false'));
+  openUrl(this.href, (localStorage['Reddit.BackgroundTabs'] == 'false'));
 }
 
 function openLinkFront(e) {
