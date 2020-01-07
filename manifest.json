@@ -1,14 +1,14 @@
 {
   "manifest_version": 2,
-  "name": "Reddit",
-  "version": "3.20.2",
-  "description": "Displays recent posts from the Reddit front page",
+  "name": "reddit",
+  "version": "1.0",
+  "description": "Displays recent posts from the reddit front page",
   "icons": {
     "48": "icon48.png",
     "128": "icon128.png"
   },
   "browser_action": {
-    "default_title": "Reddit",
+    "default_title": "reddit",
     "default_icon": "icon18.png",
     "default_popup": "popup.html"
   },

@@ -14,13 +14,13 @@ function SetInitialOption(key, value) {
 }
 
 function UpdateIfReady(force) {
-	var lastRefresh = parseFloat(localStorage["Reddit.LastRefresh"]);
-	var interval = parseFloat(localStorage["Reddit.RequestInterval"]);
+	var lastRefresh = parseFloat(localStorage["reddit.LastRefresh"]);
+	var interval = parseFloat(localStorage["reddit.RequestInterval"]);
 	var nextRefresh = lastRefresh + interval;
 	var curTime = parseFloat((new Date()).getTime());
 	var isReady = (curTime > nextRefresh);
-	var isNull = (localStorage["Reddit.LastRefresh"] == null);
-	if ((force == true) || (localStorage["Reddit.LastRefresh"] == null)) {
+	var isNull = (localStorage["reddit.LastRefresh"] == null);
+	if ((force == true) || (localStorage["reddit.LastRefresh"] == null)) {
 		UpdateFeed();
 	}
 	else {
@@ -40,17 +40,17 @@ function onRssSuccess(doc) {
 		return;
 	}
 
-	links = parseRedditLinks(doc);
+	links = parseredditLinks(doc);
 	SaveLinksToLocalStorage(links);
 	if (buildPopupAfterResponse == true) {
 		buildPopup(links);
 		buildPopupAfterResponse = false;
 	}
-	localStorage["Reddit.LastRefresh"] = (new Date()).getTime();
+	localStorage["reddit.LastRefresh"] = (new Date()).getTime();
 }
 
 function updateLastRefreshTime() {
-  localStorage["Reddit.LastRefresh"] = (new Date()).getTime();
+  localStorage["reddit.LastRefresh"] = (new Date()).getTime();
 }
 
 function DebugMessage(message) {
@@ -71,7 +71,7 @@ function handleFeedParsingFailed(error) {
   //var feed = document.getElementById("feed");
   //feed.className = "error"
   //feed.innerText = "Error: " + error;
-  localStorage["Reddit.LastRefresh"] = localStorage["Reddit.LastRefresh"] + retryMilliseconds;
+  localStorage["reddit.LastRefresh"] = localStorage["reddit.LastRefresh"] + retryMilliseconds;
 }
 
 function parseXml(xml) {
@@ -88,7 +88,7 @@ function parseXml(xml) {
   return xmlDoc;
 }
 
-function parseRedditLinks(doc) {
+function parseredditLinks(doc) {
 	doc_json = xmlToJson(doc).feed;
 	console.log(doc_json);
 	var entries = doc_json['entry'];
@@ -136,21 +136,21 @@ function parseRedditLinks(doc) {
 }
 
 function SaveLinksToLocalStorage(links) {
-	localStorage["Reddit.NumLinks"] = links.length;
+	localStorage["reddit.NumLinks"] = links.length;
 	for (var i=0; i<links.length; i++) {
-		localStorage["Reddit.Link" + i] = JSON.stringify(links[i]);
+		localStorage["reddit.Link" + i] = JSON.stringify(links[i]);
 	}
 }
 
 function RetrieveLinksFromLocalStorage() {
-	var numLinks = localStorage["Reddit.NumLinks"];
+	var numLinks = localStorage["reddit.NumLinks"];
 	if (numLinks == null) {
 		return null;
 	}
 	else {
 		var links = new Array();
 		for (var i=0; i<numLinks; i++) {
-			links.push(JSON.parse(localStorage["Reddit.Link" + i]))
+			links.push(JSON.parse(localStorage["reddit.Link" + i]))
 		}
 		return links;
 	}
@@ -163,7 +163,7 @@ function openOptions() {
 
 function openLink(e) {
   e.preventDefault();
-  openUrl(this.href, (localStorage['Reddit.BackgroundTabs'] == 'false'));
+  openUrl(this.href, (localStorage['reddit.BackgroundTabs'] == 'false'));
 }
 
 function openLinkFront(e) {

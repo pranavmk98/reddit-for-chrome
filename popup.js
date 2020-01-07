@@ -10,7 +10,7 @@ function setupEvents() {
   });
 }
 function main() {
-  if (localStorage['Reddit.NumLinks'] == null) {
+  if (localStorage['reddit.NumLinks'] == null) {
     buildPopupAfterResponse = true;
     UpdateFeed();
   }
