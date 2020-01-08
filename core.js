@@ -45,10 +45,11 @@ function onRssSubSuccess(doc) {
 	}
 	doc_json = xmlToJson(doc).feed;
 	try {
-		doc_json['entry'];
+		doc_json['entry'].length;
 	} catch (e) {
 		console.log('Sub not found');
-		// TODO: display some error if sub is invalid
+		UpdateFeed(frontpage_rss);
+		// TODO: display some error to user if sub is invalid
 		return;
 	}
 	onRssSuccess(doc);
