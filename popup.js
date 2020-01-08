@@ -12,7 +12,7 @@ function setupEvents() {
 function main() {
   if (localStorage['reddit.NumLinks'] == null) {
     buildPopupAfterResponse = true;
-    UpdateFeed();
+    UpdateFeed(frontpage_rss);
   }
   else {
     buildPopup(RetrieveLinksFromLocalStorage());
@@ -29,9 +29,9 @@ function buildPopup(links) {
   var title = document.getElementById("title");
   title.addEventListener("click", openLink);
   
-  //Setup search button
+  //Setup subreddit button
   var searchButton = document.getElementById("searchbutton");
-  searchButton.addEventListener("click", search);
+  searchButton.addEventListener("click", getSubreddit);
 
   for (var i=0; i<links.length; i++) {
     redditLink = links[i];
@@ -67,16 +67,21 @@ function buildPopup(links) {
 
 function searchOnEnter(e) {
   if (e.keyCode == 13) {
-    search();
+    getSubreddit();
   }
 }
 
-function search() {
+function getSubreddit() {
   var searchBox = document.getElementById("searchbox");
-  var keywords = searchBox.value;
-  if (keywords.length > 0) {
-    var search_url = "https://www.reddit.com/search/?q=" + keywords.replace(" ", "+");
-    openUrl(search_url, true);
+  var sub = searchBox.value;
+  if (sub.length > 0) {
+    var rss_url = "https://www.reddit.com/r/" + sub + ".rss";
+    var linkTable = document.getElementById("feed");
+    while(linkTable.hasChildNodes()) linkTable.removeChild(linkTable.firstChild); //Remove all current links
+    toggle("container");
+    toggle("spinner");
+    buildPopupAfterResponse = true;
+    UpdateSubredditFeed(rss_url);
   }
 }
 
@@ -86,6 +91,6 @@ function refreshLinks() {
   toggle("container");
   toggle("spinner");
   buildPopupAfterResponse = true;
-  UpdateFeed();
+  UpdateFeed(frontpage_rss);
   updateLastRefreshTime();
 }

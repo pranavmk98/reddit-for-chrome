@@ -15,7 +15,7 @@
 	"background": {
     "page": "background.html"
   },
-	// "options_page":"options.html",
+	"options_page":"options.html",
   "permissions": [
     "tabs",
     "https://www.reddit.com/",

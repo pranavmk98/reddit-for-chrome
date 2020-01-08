@@ -4,7 +4,7 @@ var buildPopupAfterResponse = false;
 var OnFeedSuccess = null;
 var OnFeedFail = null;
 var retryMilliseconds = 120000;
-var rss_url = "http://www.reddit.com/.rss";
+var frontpage_rss = "http://www.reddit.com/.rss";
 var reddit_url = "https://www.reddit.com/";
 
 function SetInitialOption(key, value) {
@@ -21,17 +21,37 @@ function UpdateIfReady(force) {
 	var isReady = (curTime > nextRefresh);
 	var isNull = (localStorage["reddit.LastRefresh"] == null);
 	if ((force == true) || (localStorage["reddit.LastRefresh"] == null)) {
-		UpdateFeed();
+		UpdateFeed(frontpage_rss);
 	}
 	else {
 	  if (isReady) {
-	    UpdateFeed();
+	    UpdateFeed(frontpage_rss);
 	  }
 	}
 }
 
-function UpdateFeed() {
-  $.ajax({type:'GET', dataType:'xml', url: rss_url, timeout:5000, success:onRssSuccess, error:onRssError, async: false});
+function UpdateFeed(url) {
+	$.ajax({type:'GET', dataType:'xml', url: url, timeout:5000, success:onRssSuccess, error:onRssError, async: false});
+}
+
+function UpdateSubredditFeed(url) {
+	$.ajax({type:'GET', dataType:'xml', url: url, timeout:5000, success:onRssSubSuccess, error:onRssError, async: false});
+}
+
+function onRssSubSuccess(doc) {
+	if (!doc) {
+		handleFeedParsingFailed("Not a valid feed.");
+		return;
+	}
+	doc_json = xmlToJson(doc).feed;
+	try {
+		doc_json['entry'];
+	} catch (e) {
+		console.log('Sub not found');
+		// TODO: display some error if sub is invalid
+		return;
+	}
+	onRssSuccess(doc);
 }
 
 function onRssSuccess(doc) {
@@ -90,12 +110,12 @@ function parseXml(xml) {
 
 function parseredditLinks(doc) {
 	doc_json = xmlToJson(doc).feed;
-	console.log(doc_json);
+
 	var entries = doc_json['entry'];
-	// console.log(entries);
 	if (entries.length == 0) {
 	  entries = doc_json['item'];
 	}
+
 	var count = Math.min(entries.length, maxFeedItems);
 	var links = new Array();
 	for (var i=0; i < count; i++) {
@@ -103,7 +123,6 @@ function parseredditLinks(doc) {
 		var redditLink = new Object();
 
 		//Grab the title
-		console.log(item);
 		var itemTitle = item.title;
 		if (itemTitle) {
 			redditLink.Title = itemTitle["#text"];
@@ -113,7 +132,6 @@ function parseredditLinks(doc) {
 
 		//Grab the Link
 		var itemLink = item["link"]["@attributes"]["href"];
-		console.log(item["link"], itemLink, item["link"]["@attributes"]);
 		if (itemLink) {
 			redditLink.Link = itemLink;
 		} else {
@@ -131,7 +149,6 @@ function parseredditLinks(doc) {
 
 		links.push(redditLink);
 	}
-	console.log(links);
 	return links;
 }
 
