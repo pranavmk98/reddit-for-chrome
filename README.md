@@ -10,5 +10,6 @@ To be released soon
 
 #### To implement in future:
 
-Option to toggle between old/new Reddit (easy)
-Personalized post summary (moderate - probably requires looking into Reddit API)
+* Option to toggle between old/new Reddit (easy)
+* Personalized post summary (moderate - probably requires looking into Reddit API)
+* Submit current webpage to specified subreddit (moderate - definitely requires Reddit API)
