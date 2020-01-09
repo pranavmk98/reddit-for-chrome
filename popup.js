@@ -75,6 +75,7 @@ function getSubreddit() {
   var searchBox = document.getElementById("searchbox");
   var sub = searchBox.value;
   if (sub.length > 0) {
+    // If text provided, find that subreddit
     var rss_url = "https://www.reddit.com/r/" + sub + ".rss";
     var linkTable = document.getElementById("feed");
     while(linkTable.hasChildNodes()) linkTable.removeChild(linkTable.firstChild); //Remove all current links
@@ -82,6 +83,9 @@ function getSubreddit() {
     toggle("spinner");
     buildPopupAfterResponse = true;
     UpdateSubredditFeed(rss_url);
+  } else {
+    // If empty, display front page
+    refreshLinks();
   }
 }
 
